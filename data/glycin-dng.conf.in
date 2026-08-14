@@ -1,0 +1,3 @@
+[loader:image/x-adobe-dng]
+Exec = @LIBEXECDIR@/glycin-dng
+ExposeBaseDir = false

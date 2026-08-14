@@ -1,0 +1,19 @@
+[package]
+name = "glycin-dng"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.92"
+description = "glycin loader for Adobe DNG files, serving the embedded full-resolution preview (iPhone ProRAW included)"
+license = "MPL-2.0 OR LGPL-2.1-or-later"
+repository = "https://github.com/mill-master/glycin-dng"
+readme = "README.md"
+categories = ["multimedia::images"]
+keywords = ["glycin", "dng", "gnome", "proraw", "loupe"]
+
+[dependencies]
+glycin-utils = { version = "4.1.0", default-features = false, features = ["async-io", "loader-utils"] }
+gufo-common = { version = "1.1.0", features = ["serde", "zvariant"] }
+image = { version = "0.25.9", default-features = false, features = ["jpeg"] }
+
+[profile.release]
+lto = "thin"
