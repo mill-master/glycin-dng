@@ -221,6 +221,21 @@ fn best_jpeg(d: &[u8], mut cands: Vec<Candidate>) -> Option<&[u8]> {
     d.get(c.offset..c.offset + c.len)
 }
 
+/// Decode the preview and turn it upright by the DNG's Orientation tag.
+/// The rotation happens here because Loupe shows the frame as delivered and
+/// ignores an orientation reported by the loader.
+fn decode_upright(jpeg: &[u8], orientation: Option<u16>) -> Result<image::RgbImage, String> {
+    let mut img = image::load_from_memory_with_format(jpeg, image::ImageFormat::Jpeg)
+        .map_err(|e| format!("embedded preview decode failed: {e}"))?;
+    if let Some(o) = orientation
+        .and_then(|v| u8::try_from(v).ok())
+        .and_then(image::metadata::Orientation::from_exif)
+    {
+        img.apply_orientation(o);
+    }
+    Ok(img.into_rgb8())
+}
+
 impl LoaderImplementation for ImgDecoder {
     fn init(
         mut stream: UnixStream,
@@ -237,16 +252,12 @@ impl LoaderImplementation for ImgDecoder {
             .ok_or_else(|| std::io::Error::other("no embedded JPEG preview found in DNG"))
             .expected_error()?;
 
-        let rgb = image::load_from_memory_with_format(jpeg, image::ImageFormat::Jpeg)
-            .map_err(|e| std::io::Error::other(format!("embedded preview decode failed: {e}")))
-            .expected_error()?
-            .into_rgb8();
+        let rgb = decode_upright(jpeg, orientation)
+            .map_err(std::io::Error::other)
+            .expected_error()?;
 
         let mut image_info = ImageDetails::new(rgb.width(), rgb.height());
         image_info.info_format_name = Some(String::from("DNG"));
-        image_info.transformation_orientation =
-            orientation.and_then(|x| gufo_common::orientation::Orientation::try_from(x).ok());
-        image_info.transformation_ignore_exif = false;
 
         Ok((ImgDecoder { rgb }, image_info))
     }
@@ -383,6 +394,27 @@ mod tests {
         let (cands, _) = scan_dng(&b.d).unwrap();
         assert_eq!(cands.len(), 2);
         assert_eq!(best_jpeg(&b.d, cands).unwrap(), JPEG);
+    }
+
+    #[test]
+    fn rotates_preview_upright() {
+        // Left half red, right half blue. Orientation 6 (rotate 90 degrees
+        // clockwise) must put the red half on top.
+        let src = image::RgbImage::from_fn(16, 8, |x, _| {
+            image::Rgb(if x < 8 { [255, 0, 0] } else { [0, 0, 255] })
+        });
+        let mut jpeg = Vec::new();
+        image::DynamicImage::ImageRgb8(src)
+            .write_to(&mut Cursor::new(&mut jpeg), image::ImageFormat::Jpeg)
+            .unwrap();
+
+        let up = decode_upright(&jpeg, Some(6)).unwrap();
+        assert_eq!(up.dimensions(), (8, 16));
+        let (top, bottom) = (up.get_pixel(4, 2), up.get_pixel(4, 13));
+        assert!(top[0] > 200 && top[2] < 60, "top is not red: {top:?}");
+        assert!(bottom[2] > 200 && bottom[0] < 60, "bottom is not blue: {bottom:?}");
+
+        assert_eq!(decode_upright(&jpeg, None).unwrap().dimensions(), (16, 8));
     }
 
     #[test]

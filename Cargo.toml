@@ -12,7 +12,6 @@ keywords = ["glycin", "dng", "gnome", "proraw", "loupe"]
 
 [dependencies]
 glycin-utils = { version = "4.1.0", default-features = false, features = ["async-io", "loader-utils"] }
-gufo-common = { version = "1.1.0", features = ["serde", "zvariant"] }
 image = { version = "0.25.9", default-features = false, features = ["jpeg"] }
 
 [profile.release]

@@ -466,7 +466,6 @@ name = "glycin-dng"
 version = "0.1.0"
 dependencies = [
  "glycin-utils",
- "gufo-common",
  "image",
 ]
 

@@ -35,10 +35,8 @@ The loader walks the DNG's TIFF structure: the IFD0 chain plus SubIFDs. Every
 IFD that stores a JPEG blob becomes a candidate, either through the classic
 JPEGInterchangeFormat pair or as a single JPEG-compressed strip. The primary
 preview (NewSubfileType = 1) wins over other candidates, grayscale IFDs (DNG
-semantic masks) rank last, and the largest blob breaks ties. The JPEG is
-decoded with the `image` crate, and the DNG's Orientation tag is handed to
-glycin, which applies the rotation. Around 300 lines of Rust, with the TIFF
-scanner covered by unit tests.
+semantic masks) rank last, and the largest blob breaks ties. Around 300 lines
+of Rust, with the TIFF scanner covered by unit tests.
 
 ## Installation
 
@@ -78,15 +76,12 @@ are unaffected.
 
 - Viewer-grade by design. It shows the camera's rendering and does not
   demosaic, so it is no substitute for a raw developer.
-- A DNG without any embedded JPEG preview is rejected with an error saying
-  so. In practice iPhones and mainstream cameras always embed one.
+- A DNG without any embedded JPEG preview is rejected with an error saying so. The iPhone DNGs listed under Compatibility all embed one.
 - Loading only; editing and saving through glycin are not implemented.
 
 ## Compatibility
 
-Written and tested against glycin 2.1 (config protocol `2+`, `glycin-utils`
-4.1) on Ubuntu 26.04 with GNOME 50 and Loupe. Verified with iPhone 12 Pro
-ProRAW and iPhone XS DNG samples, orientation handling included.
+Written and tested against glycin 2.1 (config protocol `2+`, `glycin-utils` 4.1) on Ubuntu 26.04 with GNOME 50 and Loupe. Verified with iPhone 12 Pro ProRAW and iPhone XS DNG samples, and with iPhone 16 Pro ProRAW from iOS 26 (DNG 1.7 with JPEG XL raw data).
 
 Once libopenraw handles ProRAW correctly, distributions will hopefully ship
 the official `glycin-raw`. This loader can then retire, or stay around for
