@@ -412,7 +412,10 @@ mod tests {
         assert_eq!(up.dimensions(), (8, 16));
         let (top, bottom) = (up.get_pixel(4, 2), up.get_pixel(4, 13));
         assert!(top[0] > 200 && top[2] < 60, "top is not red: {top:?}");
-        assert!(bottom[2] > 200 && bottom[0] < 60, "bottom is not blue: {bottom:?}");
+        assert!(
+            bottom[2] > 200 && bottom[0] < 60,
+            "bottom is not blue: {bottom:?}"
+        );
 
         assert_eq!(decode_upright(&jpeg, None).unwrap().dimensions(), (16, 8));
     }
